@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataStage — Parameter Set &amp; DSenv</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f4f4f9; color: #1a1a2e; }
+
+  header {
+    background: #1a1a2e; color: #fff;
+    padding: 24px 32px; display: flex; align-items: center; gap: 16px;
+  }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header p  { font-size: 13px; color: #aaa; margin-top: 4px; }
+  .back-btn {
+    text-decoration: none; color: #aaa; font-size: 13px;
+    padding: 6px 12px; border: 1px solid #444; border-radius: 6px;
+    margin-right: 8px; transition: color .15s;
+  }
+  .back-btn:hover { color: #fff; }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex; gap: 4px; padding: 20px 32px 0;
+    border-bottom: 2px solid #e0e0ec; background: #fff;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 20px; font-size: 13px; font-weight: 600;
+    border: none; background: none; cursor: pointer; color: #888;
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    white-space: nowrap; transition: color .15s;
+  }
+  .tab.active { color: #3b4ee0; border-bottom-color: #3b4ee0; }
+  .tab:hover:not(.active) { color: #1a1a2e; }
+
+  /* CONTENT */
+  .page { display: none; max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: #fff; border-radius: 12px;
+    border: 1.5px solid #e0e0ec; padding: 24px; margin-bottom: 20px;
+  }
+  .card h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #1a1a2e; }
+  .card h3 { font-size: 14px; font-weight: 700; margin: 16px 0 8px; color: #3b4ee0; }
+  .card p  { font-size: 13.5px; line-height: 1.7; color: #444; margin-bottom: 10px; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px; color: #fff; margin-right: 6px;
+  }
+  .b-blue   { background: #3b4ee0; }
+  .b-green  { background: #10b981; }
+  .b-orange { background: #f59e0b; }
+  .b-purple { background: #8b5cf6; }
+  .b-red    { background: #ef4444; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #1a1a2e; color: #fff; padding: 10px 12px; text-align: left; font-size: 12px; }
+  td { padding: 9px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f9f9fc; }
+  .mono { font-family: monospace; font-size: 12px; background: #eef; padding: 2px 6px; border-radius: 4px; color: #3b4ee0; }
+
+  /* FLOW */
+  .flow {
+    display: flex; align-items: center; gap: 0;
+    flex-wrap: wrap; margin: 16px 0;
+  }
+  .flow-box {
+    background: #eef2ff; border: 2px solid #3b4ee0; border-radius: 10px;
+    padding: 12px 18px; font-size: 12.5px; font-weight: 600;
+    color: #1a1a2e; text-align: center; min-width: 130px;
+  }
+  .flow-box.green  { background: #d1fae5; border-color: #10b981; }
+  .flow-box.orange { background: #fef3c7; border-color: #f59e0b; }
+  .flow-box.purple { background: #ede9fe; border-color: #8b5cf6; }
+  .flow-arrow {
+    font-size: 20px; color: #aaa; padding: 0 8px;
+  }
+
+  /* CODE BLOCK */
+  pre {
+    background: #1e1e2e; color: #cdd6f4; border-radius: 10px;
+    padding: 18px; font-size: 12.5px; line-height: 1.7;
+    overflow-x: auto; margin: 12px 0;
+  }
+  .kw  { color: #89b4fa; }
+  .str { color: #a6e3a1; }
+  .cmt { color: #6c7086; font-style: italic; }
+  .var { color: #f38ba8; }
+  .val { color: #fab387; }
+
+  /* COMPARISON GRID */
+  .cmp-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;
+  }
+  .cmp-col { border-radius: 10px; padding: 18px; }
+  .cmp-col.left  { background: #eef2ff; border: 2px solid #3b4ee0; }
+  .cmp-col.right { background: #fef3c7; border: 2px solid #f59e0b; }
+  .cmp-col h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .cmp-col ul { list-style: none; padding: 0; }
+  .cmp-col ul li { font-size: 13px; color: #444; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.06); }
+  .cmp-col ul li:last-child { border: none; }
+  .cmp-col ul li::before { content: "• "; font-weight: 700; }
+
+  /* TIPS */
+  .tip {
+    background: #d1fae5; border-left: 4px solid #10b981;
+    border-radius: 0 8px 8px 0; padding: 12px 16px;
+    font-size: 13px; color: #065f46; margin: 12px 0;
+  }
+  .warn {
+    background: #fef3c7; border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0; padding: 12px 16px;
+    font-size: 13px; color: #92400e; margin: 12px 0;
+  }
+
+  /* INTERACTIVE RESOLVER */
+  .resolver { background: #1a1a2e; border-radius: 12px; padding: 24px; color: #fff; margin: 16px 0; }
+  .resolver h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: #a6e3a1; }
+  .resolver label { font-size: 12px; color: #aaa; display: block; margin-bottom: 6px; }
+  .resolver input, .resolver select {
+    width: 100%; padding: 9px 12px; border-radius: 7px;
+    border: 1px solid #444; background: #2d2d4e; color: #fff;
+    font-size: 13px; margin-bottom: 14px; outline: none;
+  }
+  .resolver input:focus, .resolver select:focus { border-color: #3b4ee0; }
+  .run-btn {
+    background: #3b4ee0; color: #fff; border: none; border-radius: 8px;
+    padding: 10px 24px; font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: background .15s;
+  }
+  .run-btn:hover { background: #2d3eb0; }
+  .result-box {
+    margin-top: 14px; background: #0d0d1a; border-radius: 8px;
+    padding: 14px; font-family: monospace; font-size: 12.5px;
+    color: #a6e3a1; min-height: 40px; display: none;
+  }
+
+  /* PRIORITY LADDER */
+  .ladder { margin: 16px 0; }
+  .ladder-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; margin-bottom: 6px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+  }
+  .ladder-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .l1 { background: #eef2ff; } .l1 .ladder-num { background: #3b4ee0; }
+  .l2 { background: #d1fae5; } .l2 .ladder-num { background: #10b981; }
+  .l3 { background: #fef3c7; } .l3 .ladder-num { background: #f59e0b; }
+  .l4 { background: #ede9fe; } .l4 .ladder-num { background: #8b5cf6; }
+  .ladder-label { flex: 1; }
+  .ladder-sub   { font-size: 11px; font-weight: 400; color: #666; display: block; }
+
+  @media (max-width: 600px) {
+    .cmp-grid { grid-template-columns: 1fr; }
+    .tabs { padding: 16px 12px 0; }
+    header { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="../index.html" class="back-btn">← Índice</a>
+  <div>
+    <h1>📦 Parameter Set &amp; DSenv</h1>
+    <p>DataStage Clássico (Parallel Engine) — Gerenciamento de Parâmetros e Variáveis de Ambiente</p>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="show('visao-geral',this)">Visão Geral</button>
+  <button class="tab" onclick="show('parameter-set',this)">Parameter Set</button>
+  <button class="tab" onclick="show('dsenv',this)">DSenv</button>
+  <button class="tab" onclick="show('precedencia',this)">Precedência</button>
+  <button class="tab" onclick="show('comparativo',this)">Comparativo</button>
+  <button class="tab" onclick="show('exemplos',this)">Exemplos Práticos</button>
+</div>
+
+<!-- ══════════════════ VISÃO GERAL ══════════════════ -->
+<div class="page active" id="visao-geral">
+
+  <div class="card">
+    <h2>O que são parâmetros no DataStage?</h2>
+    <p>No DataStage clássico (v11.x / CP4D), parâmetros permitem externalizar valores que variam entre ambientes (dev, hml, prod) ou execuções — como strings de conexão, caminhos de arquivo, datas de referência e flags de controle.</p>
+    <p>Existem dois mecanismos principais:</p>
+    <div class="flow" style="margin-top:12px;">
+      <div class="flow-box"><span class="badge b-blue">1</span>Parameter Set<br><small style="font-weight:400;font-size:11px">Agrupamento de params<br>reutilizável em jobs</small></div>
+      <div class="flow-arrow">⟷</div>
+      <div class="flow-box orange"><span class="badge b-orange">2</span>DSenv<br><small style="font-weight:400;font-size:11px">Variáveis de ambiente<br>do sistema operacional</small></div>
+    </div>
+    <div class="tip">Ambos podem ser usados juntos. Um Parameter Set pode referenciar variáveis DSenv, e o DSenv pode sobrescrever valores de um Parameter Set em tempo de execução.</div>
+  </div>
+
+  <div class="card">
+    <h2>Fluxo de resolução de um parâmetro em runtime</h2>
+    <div class="flow" style="flex-direction:column; align-items:flex-start; gap:6px;">
+      <div class="flow-box" style="width:100%">1. Job é invocado (manual, sequencer ou API)</div>
+      <div class="flow-arrow" style="padding:0 0 0 20px;">↓</div>
+      <div class="flow-box" style="width:100%">2. Engine carrega Parameter Set(s) associados ao job</div>
+      <div class="flow-arrow" style="padding:0 0 0 20px;">↓</div>
+      <div class="flow-box" style="width:100%">3. Valores do Parameter Set são lidos do arquivo <span class="mono">.apt</span> / valor default</div>
+      <div class="flow-arrow" style="padding:0 0 0 20px;">↓</div>
+      <div class="flow-box orange" style="width:100%">4. Variáveis DSenv sobrescrevem (se definidas no ambiente do processo)</div>
+      <div class="flow-arrow" style="padding:0 0 0 20px;">↓</div>
+      <div class="flow-box green" style="width:100%">5. Valor final é usado pela stage em tempo de execução</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ PARAMETER SET ══════════════════ -->
+<div class="page" id="parameter-set">
+
+  <div class="card">
+    <h2>O que é um Parameter Set?</h2>
+    <p>Um <strong>Parameter Set</strong> é um objeto do DataStage Designer que agrupa um conjunto nomeado de parâmetros de job. Ele é criado uma vez no repositório e pode ser <em>importado</em> por múltiplos jobs, evitando duplicação.</p>
+    <h3>Estrutura</h3>
+    <table>
+      <tr><th>Campo</th><th>Descrição</th><th>Exemplo</th></tr>
+      <tr><td><strong>Nome</strong></td><td>Identificador do parâmetro no job</td><td><span class="mono">DB_SCHEMA</span></td></tr>
+      <tr><td><strong>Tipo</strong></td><td>String, Integer, Float, Pathname, List, Encrypted</td><td><span class="mono">String</span></td></tr>
+      <tr><td><strong>Valor Default</strong></td><td>Usado se nenhum override for fornecido</td><td><span class="mono">STAGING</span></td></tr>
+      <tr><td><strong>Prompt</strong></td><td>Texto exibido ao executar o job manualmente</td><td><span class="mono">Schema do banco de dados</span></td></tr>
+      <tr><td><strong>Helptext</strong></td><td>Descrição longa para documentação</td><td><span class="mono">Informe o schema destino...</span></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Tipos de parâmetro</h2>
+    <table>
+      <tr><th>Tipo</th><th>Uso típico</th><th>Observação</th></tr>
+      <tr><td><span class="badge b-blue">String</span></td><td>Nomes, schemas, flags</td><td>Mais comum</td></tr>
+      <tr><td><span class="badge b-green">Integer</span></td><td>Limites, offsets, batch size</td><td>Sem aspas em expressões</td></tr>
+      <tr><td><span class="badge b-orange">Float</span></td><td>Taxas, tolerâncias</td><td>Use ponto como separador decimal</td></tr>
+      <tr><td><span class="badge b-purple">Pathname</span></td><td>Caminhos de arquivo</td><td>Valida sintaxe de path</td></tr>
+      <tr><td><span class="badge b-red">Encrypted</span></td><td>Senhas, tokens</td><td>Armazenado cifrado no repositório</td></tr>
+      <tr><td><span class="badge" style="background:#0ea5e9">List</span></td><td>Seleção de opções fixas</td><td>Define lista de valores válidos</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Como referenciar no job</h2>
+    <p>Após importar o Parameter Set no job, o valor é referenciado com a notação:</p>
+    <pre><span class="cmt">-- Notação: #NomeDoParametro#</span>
+<span class="cmt">-- Exemplos em Transformer / SQL Stage:</span>
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="var">#DB_SCHEMA#</span>.<span class="var">#DB_TABLE#</span>
+  <span class="kw">WHERE</span> dt_ref = '<span class="var">#DT_REFERENCIA#</span>'
+
+<span class="cmt">-- Em propriedades de stage (Source/Target):</span>
+Schema:  <span class="var">#DB_SCHEMA#</span>
+Table:   <span class="var">#DB_TABLE#</span></pre>
+    <div class="warn">⚠️ Em <strong>Parallel Jobs</strong>, o delimitador é <span class="mono">#PARAM#</span>. Em <strong>Server Jobs</strong> (legado), usa-se <span class="mono">%PARAM%</span>. Não misture as notações.</div>
+  </div>
+
+  <div class="card">
+    <h2>Value File (.apt)</h2>
+    <p>Um Parameter Set pode ter um ou mais <strong>Value Files</strong> associados — arquivos texto simples que fornecem os valores para um ambiente específico (dev/hml/prod). O arquivo é selecionado ao submeter o job ou via sequencer.</p>
+    <pre><span class="cmt"># Arquivo: /opt/IBM/InformationServer/Server/Projects/MeuProjeto/
+#           ParameterSets/CONN_DW/prod.apt</span>
+
+<span class="var">DB_HOST</span>=<span class="str">dw-prod.empresa.com.br</span>
+<span class="var">DB_PORT</span>=<span class="str">5432</span>
+<span class="var">DB_SCHEMA</span>=<span class="str">DW_PROD</span>
+<span class="var">DB_TABLE</span>=<span class="str">FATO_VENDAS</span>
+<span class="var">BATCH_SIZE</span>=<span class="str">50000</span></pre>
+    <div class="tip">✅ Mantenha um arquivo <code>.apt</code> por ambiente. Nunca versione senhas em Value Files — use o tipo Encrypted ou referencie variáveis DSenv.</div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ DSENV ══════════════════ -->
+<div class="page" id="dsenv">
+
+  <div class="card">
+    <h2>O que é DSenv?</h2>
+    <p>O <strong>DSenv</strong> (DataStage Environment) é o arquivo de configuração de variáveis de ambiente lido pelo engine do DataStage no momento da inicialização de cada job. Funciona como um <em>overlay</em> do ambiente UNIX do processo.</p>
+    <h3>Localização padrão</h3>
+    <pre><span class="cmt"># IBM DataStage &amp; QualityStage (instalação típica)</span>
+/opt/IBM/InformationServer/Server/DSEngine/<span class="var">dsenv</span>
+
+<span class="cmt"># Também referenciado pelo script:</span>
+/opt/IBM/InformationServer/Server/DSEngine/<span class="var">bin/dsenv</span></pre>
+    <div class="warn">⚠️ O arquivo <code>dsenv</code> é lido pelo processo do DataStage Engine (<code>uvsh</code>). Alterações só têm efeito após reiniciar o engine ou abrir nova sessão de job.</div>
+  </div>
+
+  <div class="card">
+    <h2>Variáveis nativas mais importantes</h2>
+    <table>
+      <tr><th>Variável</th><th>Descrição</th><th>Exemplo de valor</th></tr>
+      <tr><td><span class="mono">DSHOME</span></td><td>Diretório raiz do DataStage Engine</td><td><span class="mono">/opt/IBM/InformationServer/Server/DSEngine</span></td></tr>
+      <tr><td><span class="mono">DSPROJECT</span></td><td>Projeto padrão</td><td><span class="mono">MeuProjeto</span></td></tr>
+      <tr><td><span class="mono">APT_CONFIG_FILE</span></td><td>Arquivo de configuração do Parallel Engine (*.apt)</td><td><span class="mono">/opt/.../configs/default.apt</span></td></tr>
+      <tr><td><span class="mono">APT_ORCHHOME</span></td><td>Diretório base do Parallel Engine</td><td><span class="mono">/opt/IBM/.../PXEngine</span></td></tr>
+      <tr><td><span class="mono">APT_NO_JOBMON</span></td><td>Desativa monitor de job (diagnóstico)</td><td><span class="mono">1</span></td></tr>
+      <tr><td><span class="mono">DS_DISABLE_FOLDING</span></td><td>Desativa otimização de folding</td><td><span class="mono">1</span></td></tr>
+      <tr><td><span class="mono">NLS_LANG</span></td><td>Locale para conexões Oracle</td><td><span class="mono">AMERICAN_AMERICA.AL32UTF8</span></td></tr>
+      <tr><td><span class="mono">JAVA_HOME</span></td><td>JVM usada por stages Java/XML</td><td><span class="mono">/usr/java/jdk1.8</span></td></tr>
+      <tr><td><span class="mono">LD_LIBRARY_PATH</span></td><td>Bibliotecas compartilhadas (.so)</td><td><span class="mono">/opt/oracle/lib:$LD_LIBRARY_PATH</span></td></tr>
+      <tr><td><span class="mono">ODBCINI</span></td><td>Arquivo de configuração ODBC</td><td><span class="mono">/opt/IBM/.../odbc.ini</span></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Variáveis de usuário no DSenv</h2>
+    <p>Você pode definir <em>qualquer</em> variável no <code>dsenv</code> e referenciá-la em parâmetros de job com a notação <span class="mono">$NOME_VAR</span> ou usando o tipo de parâmetro <strong>Environment Variable</strong>.</p>
+    <pre><span class="cmt"># /opt/IBM/InformationServer/Server/DSEngine/dsenv</span>
+
+<span class="cmt"># — Variáveis de sistema (não altere sem necessidade) —</span>
+<span class="kw">export</span> <span class="var">DSHOME</span>=<span class="str">"/opt/IBM/InformationServer/Server/DSEngine"</span>
+<span class="kw">export</span> <span class="var">APT_CONFIG_FILE</span>=<span class="str">"$DSHOME/configs/default.apt"</span>
+
+<span class="cmt"># — Variáveis de negócio (seu ambiente) —</span>
+<span class="kw">export</span> <span class="var">DS_ENV</span>=<span class="str">"PROD"</span>
+<span class="kw">export</span> <span class="var">DW_HOST</span>=<span class="str">"dw-prod.empresa.com.br"</span>
+<span class="kw">export</span> <span class="var">DW_PORT</span>=<span class="str">"5432"</span>
+<span class="kw">export</span> <span class="var">DW_SCHEMA</span>=<span class="str">"DW_PROD"</span>
+<span class="kw">export</span> <span class="var">ETL_WORKDIR</span>=<span class="str">"/data/etl/workdir"</span>
+<span class="kw">export</span> <span class="var">ETL_REJECT_DIR</span>=<span class="str">"/data/etl/rejects"</span>
+
+<span class="cmt"># — Ajustes de bibliotecas —</span>
+<span class="kw">export</span> <span class="var">LD_LIBRARY_PATH</span>=<span class="str">"/opt/oracle/lib:$LD_LIBRARY_PATH"</span>
+<span class="kw">export</span> <span class="var">ODBCINI</span>=<span class="str">"/opt/IBM/InformationServer/Server/DSEngine/odbc.ini"</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>Referenciar DSenv em um Parameter Set</h2>
+    <p>No campo <strong>Default Value</strong> de um parâmetro, use a sintaxe:</p>
+    <pre><span class="cmt"># Parâmetro DB_HOST com default vindo do DSenv:</span>
+Default Value: <span class="var">$DW_HOST</span>
+
+<span class="cmt"># No Value File (.apt), também funciona:</span>
+<span class="var">DB_HOST</span>=<span class="str">$DW_HOST</span>
+<span class="var">WORK_DIR</span>=<span class="str">$ETL_WORKDIR</span>/run_<span class="str">$DS_ENV</span></pre>
+    <div class="tip">✅ Essa é a prática recomendada para senhas e hosts: armazene no <code>dsenv</code> (gerenciado pelo sysadmin/vault) e referencie no Parameter Set.</div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ PRECEDÊNCIA ══════════════════ -->
+<div class="page" id="precedencia">
+
+  <div class="card">
+    <h2>Ordem de precedência (quem ganha?)</h2>
+    <p>Quando o mesmo parâmetro pode vir de múltiplas fontes, o DataStage segue esta hierarquia — do maior para o menor peso:</p>
+
+    <div class="ladder">
+      <div class="ladder-item l1">
+        <div class="ladder-num">1</div>
+        <div class="ladder-label">
+          Override explícito na invocação do job
+          <span class="ladder-sub">dsjob -param NOME=VALOR · API REST · Sequencer com override</span>
+        </div>
+        <span class="badge b-blue">MAIOR</span>
+      </div>
+      <div class="ladder-item l2">
+        <div class="ladder-num">2</div>
+        <div class="ladder-label">
+          Value File (.apt) do Parameter Set
+          <span class="ladder-sub">Selecionado no job run / sequencer</span>
+        </div>
+        <span class="badge b-green">ALTO</span>
+      </div>
+      <div class="ladder-item l3">
+        <div class="ladder-num">3</div>
+        <div class="ladder-label">
+          Variáveis DSenv (ambiente do processo)
+          <span class="ladder-sub">Definidas em /DSEngine/dsenv ou export na shell</span>
+        </div>
+        <span class="badge b-orange">MÉDIO</span>
+      </div>
+      <div class="ladder-item l4">
+        <div class="ladder-num">4</div>
+        <div class="ladder-label">
+          Valor Default do Parameter Set (no Designer)
+          <span class="ladder-sub">Fallback quando nenhuma outra fonte fornece o valor</span>
+        </div>
+        <span class="badge b-purple">BAIXO</span>
+      </div>
+    </div>
+
+    <div class="warn">⚠️ <strong>Atenção:</strong> em alguns contextos o DSenv pode ter precedência sobre o Value File dependendo de como o parâmetro é do tipo <em>Environment Variable</em>. Sempre teste o comportamento no seu ambiente.</div>
+  </div>
+
+  <div class="card">
+    <h2>Simulador de resolução</h2>
+    <div class="resolver">
+      <h3>🔍 Qual valor será usado?</h3>
+      <label>Valor Default (Parameter Set Designer)</label>
+      <input id="r_default" type="text" placeholder="ex: DEV_SCHEMA" value="DEV_SCHEMA">
+      <label>Variável DSenv definida? (deixe vazio se não)</label>
+      <input id="r_dsenv" type="text" placeholder="ex: PROD_SCHEMA">
+      <label>Value File (.apt) define este parâmetro? (deixe vazio se não)</label>
+      <input id="r_apt" type="text" placeholder="ex: HML_SCHEMA">
+      <label>Override na invocação do job? (deixe vazio se não)</label>
+      <input id="r_override" type="text" placeholder="ex: TEMP_SCHEMA">
+      <button class="run-btn" onclick="resolveParam()">Simular →</button>
+      <div class="result-box" id="r_result"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ COMPARATIVO ══════════════════ -->
+<div class="page" id="comparativo">
+
+  <div class="card">
+    <h2>Parameter Set × DSenv — quando usar cada um?</h2>
+    <div class="cmp-grid">
+      <div class="cmp-col left">
+        <h3 style="color:#3b4ee0">📦 Parameter Set</h3>
+        <ul>
+          <li>Parâmetros de negócio (schema, tabela, data)</li>
+          <li>Valores que variam por job ou por execução</li>
+          <li>Documentação visível no Designer</li>
+          <li>Suporte a Value Files por ambiente</li>
+          <li>Compartilhável entre múltiplos jobs</li>
+          <li>Tipo Encrypted para dados sensíveis</li>
+          <li>Auditável via repositório do DataStage</li>
+        </ul>
+      </div>
+      <div class="cmp-col right">
+        <h3 style="color:#b45309">🌐 DSenv</h3>
+        <ul>
+          <li>Configuração de infraestrutura (libs, paths)</li>
+          <li>Senhas e hosts gerenciados pelo sistema</li>
+          <li>Variáveis usadas por múltiplos projetos</li>
+          <li>Ajustes de runtime do Parallel Engine</li>
+          <li>Variáveis de sistema operacional (NLS, LD_LIBRARY)</li>
+          <li>Valores que não devem aparecer no Designer</li>
+          <li>Gerenciado pelo sysadmin / vault externo</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip">✅ <strong>Melhor prática:</strong> use <em>Parameter Set</em> para tudo que os desenvolvedores precisam ver e versionar; use <em>DSenv</em> para segredos e configurações de infraestrutura gerenciadas pela equipe de plataforma.</div>
+  </div>
+
+  <div class="card">
+    <h2>Tabela comparativa detalhada</h2>
+    <table>
+      <tr><th>Critério</th><th>Parameter Set</th><th>DSenv</th></tr>
+      <tr><td>Onde é definido</td><td>DataStage Designer / Repository</td><td>Arquivo texto no servidor</td></tr>
+      <tr><td>Escopo</td><td>Job ou conjunto de jobs</td><td>Todo o DataStage Engine</td></tr>
+      <tr><td>Visível no Designer</td><td>✅ Sim</td><td>❌ Não (requer acesso SSH)</td></tr>
+      <tr><td>Versionável no DS</td><td>✅ Sim (export/import)</td><td>❌ Requer controle externo (git)</td></tr>
+      <tr><td>Múltiplos ambientes</td><td>✅ Via Value Files</td><td>✅ Via arquivos dsenv separados</td></tr>
+      <tr><td>Tipo Encrypted</td><td>✅ Sim</td><td>❌ Não nativo (use vault)</td></tr>
+      <tr><td>Override por execução</td><td>✅ Sim (dsjob -param)</td><td>❌ Somente via export na shell</td></tr>
+      <tr><td>Requer restart engine</td><td>❌ Não</td><td>✅ Sim (para novas variáveis)</td></tr>
+      <tr><td>Usado por stages</td><td>Via <span class="mono">#PARAM#</span></td><td>Via <span class="mono">$VAR</span> ou tipo Env Var</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ══════════════════ EXEMPLOS PRÁTICOS ══════════════════ -->
+<div class="page" id="exemplos">
+
+  <div class="card">
+    <h2>Exemplo 1 — Parameter Set para conexão com banco</h2>
+    <h3>1. Criar Parameter Set "CONN_DW" no Designer</h3>
+    <table>
+      <tr><th>Parâmetro</th><th>Tipo</th><th>Default</th></tr>
+      <tr><td><span class="mono">DW_HOST</span></td><td>String</td><td><span class="mono">$DW_HOST</span> (do DSenv)</td></tr>
+      <tr><td><span class="mono">DW_PORT</span></td><td>Integer</td><td><span class="mono">5432</span></td></tr>
+      <tr><td><span class="mono">DW_SCHEMA</span></td><td>String</td><td><span class="mono">DW_HML</span></td></tr>
+      <tr><td><span class="mono">DW_USER</span></td><td>String</td><td><span class="mono">etl_user</span></td></tr>
+      <tr><td><span class="mono">DW_PASS</span></td><td>Encrypted</td><td><span class="mono">{encrypted}</span></td></tr>
+    </table>
+    <h3>2. Value File — hml.apt</h3>
+    <pre><span class="var">DW_HOST</span>=<span class="str">dw-hml.empresa.com.br</span>
+<span class="var">DW_PORT</span>=<span class="str">5432</span>
+<span class="var">DW_SCHEMA</span>=<span class="str">DW_HML</span>
+<span class="var">DW_USER</span>=<span class="str">etl_hml</span>
+<span class="var">DW_PASS</span>=<span class="str">{encrypted_hash_aqui}</span></pre>
+    <h3>3. Value File — prod.apt</h3>
+    <pre><span class="var">DW_HOST</span>=<span class="str">$DW_HOST</span>  <span class="cmt"># lido do DSenv em prod</span>
+<span class="var">DW_PORT</span>=<span class="str">5432</span>
+<span class="var">DW_SCHEMA</span>=<span class="str">DW_PROD</span>
+<span class="var">DW_USER</span>=<span class="str">etl_prod</span>
+<span class="var">DW_PASS</span>=<span class="str">$DW_PASS_PROD</span>  <span class="cmt"># senha vem do DSenv (vault)</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>Exemplo 2 — Invocar job via linha de comando com override</h2>
+    <pre><span class="cmt"># Execução normal (usa o Value File padrão do job)</span>
+<span class="kw">dsjob</span> -run -jobstatus MeuProjeto JOB_CARGA_FATO
+
+<span class="cmt"># Com Value File específico</span>
+<span class="kw">dsjob</span> -run -jobstatus MeuProjeto JOB_CARGA_FATO \
+  -paramfile /data/params/prod.apt
+
+<span class="cmt"># Override de parâmetro individual</span>
+<span class="kw">dsjob</span> -run -jobstatus MeuProjeto JOB_CARGA_FATO \
+  -param DW_SCHEMA=DW_PROD_BACKUP \
+  -param BATCH_SIZE=10000
+
+<span class="cmt"># Via API REST (CP4D / DataStage as a Service)</span>
+<span class="kw">POST</span> /v3/jobs/{job_id}/runs
+{
+  "job_run_config": {
+    "job_runtime": {
+      "env_variables": {
+        <span class="str">"DW_SCHEMA"</span>: <span class="str">"DW_PROD"</span>,
+        <span class="str">"BATCH_SIZE"</span>: <span class="str">"50000"</span>
+      }
+    }
+  }
+}</pre>
+  </div>
+
+  <div class="card">
+    <h2>Exemplo 3 — Sequencer passando parâmetros para jobs filhos</h2>
+    <pre><span class="cmt">-- No job sequenciador, defina parâmetros no nível do sequencer:</span>
+<span class="cmt">-- Parâmetro: DT_REF (String, Default: hoje)</span>
+
+<span class="cmt">-- Na activity de invocação do job filho, mapeie:</span>
+Job Parameter:  DT_REF  =  <span class="var">#DT_REF#</span>   <span class="cmt">(herda do sequencer)</span>
+Job Parameter:  SCHEMA  =  <span class="var">#DW_SCHEMA#</span>
+
+<span class="cmt">-- DSenv complementa automaticamente variáveis não mapeadas</span></pre>
+    <div class="tip">✅ Prefira sempre passar parâmetros explicitamente no sequencer. Dependência implícita de DSenv em jobs filhos dificulta a rastreabilidade.</div>
+  </div>
+
+  <div class="card">
+    <h2>Troubleshooting rápido</h2>
+    <table>
+      <tr><th>Sintoma</th><th>Causa provável</th><th>Solução</th></tr>
+      <tr><td>Parâmetro não resolvido — valor literal <span class="mono">#PARAM#</span> no log</td><td>Parameter Set não importado no job</td><td>Job Properties → Parameters → Import Set</td></tr>
+      <tr><td>Job usa valor errado de ambiente</td><td>Value File errado selecionado</td><td>Verificar Run Configuration / Sequencer</td></tr>
+      <tr><td>Variável DSenv não encontrada</td><td>Engine não relido após edição do dsenv</td><td>Restart do DataStage Engine</td></tr>
+      <tr><td>Senha em claro no log</td><td>Tipo String em vez de Encrypted</td><td>Alterar tipo para Encrypted e regravar</td></tr>
+      <tr><td><span class="mono">APT_CONFIG_FILE</span> inválido</td><td>Path inexistente no dsenv</td><td>Verificar/criar o arquivo .apt de config do engine</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer style="text-align:center;padding:28px;font-size:12px;color:#aaa;border-top:1px solid #e0e0ec;margin-top:20px;">
+  DataStage Parameter Set &amp; DSenv · Gerado com Claude AI
+</footer>
+
+<script>
+  function show(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function resolveParam() {
+    const def      = document.getElementById('r_default').value.trim();
+    const dsenv    = document.getElementById('r_dsenv').value.trim();
+    const apt      = document.getElementById('r_apt').value.trim();
+    const override = document.getElementById('r_override').value.trim();
+
+    let winner, source;
+    if (override) { winner = override; source = '1️⃣  Override na invocação do job (maior precedência)'; }
+    else if (apt) { winner = apt;      source = '2️⃣  Value File (.apt) do Parameter Set'; }
+    else if (dsenv){ winner = dsenv;   source = '3️⃣  Variável DSenv'; }
+    else if (def)  { winner = def;     source = '4️⃣  Valor Default do Parameter Set (fallback)'; }
+    else           { winner = '(vazio)'; source = '⚠️  Nenhum valor fornecido — parâmetro ficará em branco!'; }
+
+    const box = document.getElementById('r_result');
+    box.style.display = 'block';
+    box.innerHTML = `Fonte vencedora: ${source}\nValor final usado: <span style="color:#fab387;font-weight:700">${winner}</span>`;
+  }
+</script>
+</body>
+</html>
