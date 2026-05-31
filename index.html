@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Widgets — Índice</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f4f4f9;
+    color: #1a1a2e;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 28px 32px 24px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 22px; font-weight: 700; }
+  header p { font-size: 13px; color: #aaa; margin-top: 4px; }
+  .header-text { flex: 1; }
+
+  .search-bar {
+    padding: 8px 14px; border-radius: 8px; border: none;
+    font-size: 13px; width: 240px; outline: none;
+    background: #2d2d4e; color: #fff;
+  }
+  .search-bar::placeholder { color: #888; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+  /* FILTERS */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .tag-btn {
+    padding: 5px 14px; border-radius: 20px; border: 1.5px solid #ccc;
+    background: #fff; cursor: pointer; font-size: 12px; font-weight: 600;
+    color: #555; transition: all .15s;
+  }
+  .tag-btn:hover { border-color: #888; }
+  .tag-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1.5px solid #e0e0ec;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: box-shadow .15s, transform .15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,.10);
+    transform: translateY(-2px);
+  }
+  .card.hidden { display: none; }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-icon { font-size: 28px; line-height: 1; }
+  .tag {
+    font-size: 10px; font-weight: 700; border-radius: 5px;
+    padding: 3px 9px; color: #fff; white-space: nowrap;
+  }
+  .tag-datastage  { background: #3b4ee0; }
+  .tag-estatistica { background: #10b981; }
+  .tag-dados      { background: #f59e0b; }
+  .tag-infra      { background: #8b5cf6; }
+  .tag-visualizacao { background: #ef4444; }
+  .tag-outros     { background: #6b7280; }
+
+  .card-title { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+  .card-desc  { font-size: 12.5px; color: #666; line-height: 1.6; flex: 1; }
+  .card-file  { font-size: 11px; color: #aaa; font-family: monospace; margin-top: 4px; }
+
+  .open-btn {
+    display: inline-block; margin-top: 6px;
+    padding: 7px 16px; border-radius: 8px;
+    background: #1a1a2e; color: #fff;
+    font-size: 12px; font-weight: 600;
+    text-decoration: none; text-align: center;
+    transition: background .15s;
+  }
+  .open-btn:hover { background: #3b4ee0; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; color: #aaa; padding: 60px 20px; font-size: 14px; display: none; }
+
+  /* ADD CARD */
+  .card-add {
+    border: 2px dashed #c0c0d0;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 30px;
+    border-radius: 12px;
+    color: #aaa;
+    font-size: 13px;
+    cursor: default;
+    min-height: 180px;
+  }
+  .card-add span { font-size: 28px; }
+
+  /* STATS BAR */
+  .stats { font-size: 12px; color: #888; margin-bottom: 14px; }
+
+  footer {
+    text-align: center; padding: 32px; font-size: 12px; color: #aaa;
+    border-top: 1px solid #e0e0ec; margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-text">
+    <h1>🤖 Claude Widgets</h1>
+    <p>Índice de arquivos HTML gerados pelo Claude AI</p>
+  </div>
+  <input class="search-bar" type="text" placeholder="🔍 Buscar widget..." id="search" oninput="applyFilters()" />
+</header>
+
+<main>
+
+  <div class="filters" id="filters">
+    <button class="tag-btn active" data-tag="all" onclick="setTag('all',this)">Todos</button>
+    <button class="tag-btn" data-tag="datastage"    onclick="setTag('datastage',this)">DataStage</button>
+    <button class="tag-btn" data-tag="estatistica"  onclick="setTag('estatistica',this)">Estatística</button>
+    <button class="tag-btn" data-tag="dados"        onclick="setTag('dados',this)">Dados</button>
+    <button class="tag-btn" data-tag="visualizacao" onclick="setTag('visualizacao',this)">Visualização</button>
+    <button class="tag-btn" data-tag="infra"        onclick="setTag('infra',this)">Infra / DevOps</button>
+    <button class="tag-btn" data-tag="outros"       onclick="setTag('outros',this)">Outros</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="grid" id="grid">
+
+    <!-- ═══════════════════════════════════════════
+         ADICIONE SEUS WIDGETS AQUI
+         Copie um bloco <a class="card"> e edite:
+           - href        → caminho do arquivo html
+           - data-tag    → categoria (veja os filtros acima)
+           - card-icon   → emoji representativo
+           - tag class   → cor do badge (tag-datastage, tag-estatistica, etc.)
+           - card-title  → nome do widget
+           - card-desc   → descrição curta
+           - card-file   → nome do arquivo
+    ═══════════════════════════════════════════ -->
+
+    <a class="card" href="widgets/ds-parameterset-dsenv.html" data-tag="datastage" data-title="DataStage Parameter Set e DSenv">
+      <div class="card-top">
+        <div class="card-icon">📦</div>
+        <span class="tag tag-datastage">DataStage</span>
+      </div>
+      <div class="card-title">Parameter Set &amp; DSenv</div>
+      <div class="card-desc">Explicação visual e interativa do Parameter Set e variáveis DSenv no DataStage clássico. Inclui fluxo de execução e comparativo.</div>
+      <div class="card-file">widgets/ds-parameterset-dsenv.html</div>
+      <span class="open-btn">Abrir →</span>
+    </a>
+
+    <a class="card" href="widgets/stats-tecnicas-matrix.html" data-tag="estatistica" data-title="Matriz de Técnicas Estatísticas">
+      <div class="card-top">
+        <div class="card-icon">📊</div>
+        <span class="tag tag-estatistica">Estatística</span>
+      </div>
+      <div class="card-title">Matriz de Técnicas Estatísticas</div>
+      <div class="card-desc">18 técnicas estatísticas com quando usar, uso principal e exemplo prático. Filtros por categoria e indicador de complexidade.</div>
+      <div class="card-file">widgets/stats-tecnicas-matrix.html</div>
+      <span class="open-btn">Abrir →</span>
+    </a>
+
+    <!-- CARD TEMPLATE — descomente e edite para adicionar novo widget
+    <a class="card" href="widgets/meu-widget.html" data-tag="outros" data-title="Meu Widget">
+      <div class="card-top">
+        <div class="card-icon">🔧</div>
+        <span class="tag tag-outros">Outros</span>
+      </div>
+      <div class="card-title">Meu Widget</div>
+      <div class="card-desc">Descrição do widget aqui.</div>
+      <div class="card-file">widgets/meu-widget.html</div>
+      <span class="open-btn">Abrir →</span>
+    </a>
+    -->
+
+    <!-- Card de adicionar -->
+    <div class="card-add" id="add-card">
+      <span>＋</span>
+      <div>Salve um novo HTML em <code>widgets/</code><br>e adicione o card acima</div>
+    </div>
+
+  </div>
+
+  <div class="empty" id="empty">Nenhum widget encontrado para "<span id="empty-term"></span>".</div>
+
+</main>
+
+<footer>
+  Gerado com Claude AI · Atualize manualmente os cards ao adicionar novos widgets
+</footer>
+
+<script>
+  let activeTag = 'all';
+
+  function setTag(tag, btn) {
+    activeTag = tag;
+    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const cards = document.querySelectorAll('.card[data-tag]');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const matchTag = activeTag === 'all' || card.dataset.tag === activeTag;
+      const matchSearch = !search || card.dataset.title.toLowerCase().includes(search)
+        || card.querySelector('.card-desc').textContent.toLowerCase().includes(search);
+
+      if (matchTag && matchSearch) {
+        card.classList.remove('hidden');
+        visible++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('stats').textContent = `${visible} widget${visible !== 1 ? 's' : ''} encontrado${visible !== 1 ? 's' : ''}`;
+    document.getElementById('empty').style.display = visible === 0 ? 'block' : 'none';
+    document.getElementById('empty-term').textContent = search || activeTag;
+    document.getElementById('add-card').style.display = activeTag !== 'all' ? 'none' : '';
+  }
+
+  // init
+  applyFilters();
+</script>
+</body>
+</html>
